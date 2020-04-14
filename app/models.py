@@ -93,5 +93,13 @@ class Conversation(models.Model):
     messages = models.ManyToManyField(Message)
 
 
+class Review(models.Model):
+    # need a field that maps the request to user writing it, and the user it is about
+    description = models.CharField(max_length=500) # written review
+    rating = models.IntegerField() # save the value of rating from 1 to 5
+    reviewee = models.CharField(max_length=100) # user being reviewed
+    reviewer = models.CharField(max_length=100) # user making review
+    def __str__(self):
+        return self.description
 
 
