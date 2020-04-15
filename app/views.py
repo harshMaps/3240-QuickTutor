@@ -7,7 +7,7 @@ from django.contrib.auth import logout
 from django.db.models import Q
 from .models import *
 from .forms import *
-from django.contrib import messages
+from django.contrib import messages as django_messages
 import datetime
 import requests as rq
 
@@ -88,9 +88,9 @@ def feed(request):
         # handle get request
         else:
             # Get list of requests, ordered by publication date/time
-            if 'q' in request.GET:
-                query = request.GET.get('q')
-                requests_list = Request.objects.order_by('-pub_date')[:].filter(Q(title__icontains=query) | Q(description__icontains=query))
+            if 'filter' in request.GET:
+                query = request.GET.get('filter')
+                requests_list = Request.objects.order_by('-pub_date')[:].filter(Q(title__icontains=query) | Q(description__icontains=query) | Q(location__icontains=query))
             else:  
                 requests_list = Request.objects.order_by('-pub_date')[:]
 
@@ -372,7 +372,7 @@ def contacts(request):
                 # If a user with this email does not exist, or if you're trying to add yourself,
                 # just redirect to contacts page
                 if (not contact_exists or contact_to_add_email == user.email):
-                    return HttpResponseRedirect('/contacts/')
+                    return HttpResponseRedirect('/contacts')
 
                 # Otherwise, check to see if this user is already a contact
                 else:

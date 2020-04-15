@@ -50,14 +50,26 @@
       </ul>
       </div>
 
-  </nav><br>
+  </nav>
   <!-- End Navbar -->
 
   <!-- Jumbotron -->
-  <div class="jumbotron jumbotron-fluid">
+  <div class="jumbotron jumbotron-fluid" style="padding: 10px;">
     <div class="container">
       <h1 id="h1" class="display-4">Request Feed</h1>
       <p class="lead"> Browse current requests, and offer help to students in need!</p>
+
+      <!-- Begin Search Bar -->
+      <div>
+        <form method="GET" action="">
+          <div class="row">
+            <input class="form-control inline col-3" name="filter" value="{{request.GET.q}}" placeholder="Search by Keyword..." style="margin-left: 15px;">
+            <button class="btn" style="background-color: #6cbcaf; border-color: #6cbcaf; color: white; margin-left: 10px;" type="submit"> Search </button>
+          </div>
+        </form>
+      </div><br>
+      <!-- End  Search Bar -->
+
     </div>
   </div>
   <!-- End jumbotron -->
@@ -65,17 +77,6 @@
   <!-- Begin feed -->
   {% if requests_list %}
     <div class="container">
-      <!-- Begin Search Bar -->
-      <div class="searchBar">
-        <form method="GET" action="">
-          <input name="q" value="{{request.GET.q}}" placeholder="Search by Keyword...">
-          <button class="btn searchRequests" style="background-color: #6cbcaf; border-color: #6cbcaf; color: white;" type="submit">
-            Search
-          </button>
-        </form>
-      </div><br>
-      <!-- End  Search Bar -->
-
       <!-- This uses a custom template filter to iterate through both lists simultaneously -->
       {% for request, time in requests_list|zip:times %}
         <div class="row" style="padding-bottom: 30px;">
@@ -121,7 +122,11 @@
       {% endfor %}
     </div>
   {% else %}
-      <p>No requests are available.</p>
+    <div class="container">
+      <div class="row">
+        <p class="lead">No requests are available.</p>
+      </div>
+    </div>
   {% endif %}
   <!-- End feed -->
 
