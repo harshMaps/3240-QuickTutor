@@ -11,6 +11,7 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     path('contacts/', views.contacts, name='contacts'),
     path('messages/', views.messages, name='messages'),
+    path('review/', views.review, name='review'),
 ]
 
 if settings.DEBUG:

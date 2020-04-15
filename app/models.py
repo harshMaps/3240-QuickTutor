@@ -50,6 +50,18 @@ class User(AbstractUser):
         # need to 'pip install Pillow' to make this work
 
     has_active_request = models.BooleanField(default=False)
+    reviewable_tutor = models.CharField(max_length=100,default="None")
+    reviewable_tutee = models.CharField(max_length=100,default="None")
+    """
+    A user can only have one reviewable user of each type at a time.
+    This is because tutees can only have one active request at a time
+    and tutors can only help one user at a time.
+    Therefore, once they move onto making a new request/helping a new tutee
+    the window of opportunity to review this user has passed.
+    However, a tutor offering help can have an active request for help themselves
+    therefore, we need 2 fields.
+    """
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
     

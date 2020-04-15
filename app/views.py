@@ -1,9 +1,7 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect
-from django.http import HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse
 from django.utils import timezone
-from django.contrib.auth import get_user
-from django.contrib.auth import logout
+from django.contrib.auth import get_user, logout
 from django.db.models import Q
 from .models import *
 from .forms import *
@@ -233,10 +231,18 @@ def myRequest(request):
                 # If the tutor's offer still holds, go ahead and delete the request, and set boolean flag
                 request_to_edit.delete()
                 user.has_active_request = False
+
+                # Deal with reviews
+                user.reviewable_tutor = tutor # save the tutor object as reviewable
+                # tutor variable should have been storing their email according to line 218
                 user.save()
 
                 # Get the tutor's User object
                 tutor_user = User.objects.get(email=tutor)
+
+                # Deal with reviews
+                tutor_user.reviewable_tutee = user.email # savee the user object as reviewable to the tutor
+                tutor_user.save()
 
                 # If the tutor is not in the user's contacts, add the tutor
                 if tutor_user not in user.contacts.all():
@@ -546,3 +552,23 @@ def getConversation(user1, user2):
     conversation = all_conversations_user1.filter(participants__email=user2)[0]
 
     return conversation
+
+def review(request):
+    # need to create the form for them to submit reviews
+    # edit the user models and remove the person they are reviewing
+    # from their "reviewable_" field
+    
+    # Check if logged in
+    # if request.user.is_authenticated:
+    #     # If getting a post request...
+    #     if request.method == 'POST':
+    #         # If it's a 'new request' request...
+    #         if request.POST.get('action') == 'Submit':
+    #             pass
+    #         # If it's a 'logout' request...
+    #         elif request.POST.get('action') == 'Logout':
+    #             pass
+    #     # Else, a GET request. just loading the page
+    #     else:
+    #         return render(request, 'app/review.html')
+    return render(request, 'app/review.html')
