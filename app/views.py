@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseRedirect, HttpResponse
 from django.utils import timezone
 from django.contrib.auth import get_user, logout
@@ -554,10 +554,6 @@ def getConversation(user1, user2):
     return conversation
 
 def review(request):
-    # need to create the form for them to submit reviews
-    # edit the user models and remove the person they are reviewing
-    # from their "reviewable_user" field
-    
     # Check if logged in
     if request.user.is_authenticated:
         # If getting a post request...
@@ -567,19 +563,23 @@ def review(request):
                 # Make sure they don't have an active request
                 user = get_user(request)
 
-                # If they don't have an active request, go ahead and create the request with their entered data
+                # create a new review object
                 rating = request.POST['rating']
                 description = request.POST['description']
                 new_review = Review()
                 new_review.rating = rating
                 new_review.description = description
                 new_review.reviewer = user.email
+                # reviewee = user.reviewable_user # need for later
                 new_review.reviewee = user.reviewable_user
                 new_review.save()
 
-                # Reset their reviewable_user field
+                # Update the reviewer user: reset reviewable_user field
                 user.reviewable_user = "None"
                 user.save()
+
+                # Update the reviewee user: ratings rield  <-- having issues
+                # reviewee_user = User.objects.get(email=reviewee)
 
                 # Use redirect to refresh the page
                 return HttpResponseRedirect('/review')

@@ -54,8 +54,8 @@ class User(AbstractUser):
 
     # fields for reviews
     reviewable_user = models.CharField(max_length=100,default="None")
-    # reviewable_tutee = models.CharField(max_length=100,default="None")
-    # is_tutor = models.BooleanField(default=False) # saves if user is in tutor mode, therefore reviewing tutee
+    avg_rating = models.IntegerField(default=0) # stores the value of their rating out of 5 (like stars)
+    rating_count = models.IntegerField(default=0) # stores the total number of ratings they have received so far
     """
     A user can only have one reviewable user of each type at a time.
     This is because tutees can only have one active request at a time
