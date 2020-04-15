@@ -233,7 +233,7 @@ def myRequest(request):
                 user.has_active_request = False
 
                 # Deal with reviews
-                user.reviewable_tutor = tutor # save the tutor object as reviewable
+                user.reviewable_user = tutor # save the tutor object as reviewable
                 # tutor variable should have been storing their email according to line 218
                 user.save()
 
@@ -241,7 +241,7 @@ def myRequest(request):
                 tutor_user = User.objects.get(email=tutor)
 
                 # Deal with reviews
-                tutor_user.reviewable_tutee = user.email # savee the user object as reviewable to the tutor
+                tutor_user.reviewable_user = user.email # savee the user object as reviewable to the tutor
                 tutor_user.save()
 
                 # If the tutor is not in the user's contacts, add the tutor
@@ -556,7 +556,7 @@ def getConversation(user1, user2):
 def review(request):
     # need to create the form for them to submit reviews
     # edit the user models and remove the person they are reviewing
-    # from their "reviewable_" field
+    # from their "reviewable_user" field
     
     # Check if logged in
     # if request.user.is_authenticated:
@@ -564,11 +564,29 @@ def review(request):
     #     if request.method == 'POST':
     #         # If it's a 'new request' request...
     #         if request.POST.get('action') == 'Submit':
-    #             pass
+    #             # Make sure they don't have an active request
+    #             user = get_user(request)
+
+    #             # If they don't have an active request, go ahead and create the request with their entered data
+    #             rating = request.POST['rating']
+    #             description = request.POST['description']
+    #             new_review = Review()
+    #             new_review.rating = rating
+    #             new_review.description = description
+    #             new_review.reviewer = user.email
+    #             new_review.reviewee = user.reviewable_user
+    #             new_request.save()
+
+    #             # Reset their reviewable_user field
+    #             user.reviewable_user = "None"
+    #             user.save()
+
+    #             # Use redirect to refresh the page
+    #             return HttpResponseRedirect('/review')
     #         # If it's a 'logout' request...
     #         elif request.POST.get('action') == 'Logout':
-    #             pass
+    #             logout(request)
+    #             return HttpResponseRedirect('/')
     #     # Else, a GET request. just loading the page
     #     else:
-    #         return render(request, 'app/review.html')
-    return render(request, 'app/review.html')
+            return render(request, 'app/review.html')
