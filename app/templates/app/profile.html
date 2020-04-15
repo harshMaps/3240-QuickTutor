@@ -58,6 +58,11 @@
     <img style="border-radius: 50%; height: 10%; width: 10%;" src="{{ tutorORtutee.image.url }}">
     <p class="text-secondary"><br>{{tutorORtutee.email}} <br/>
       {{tutorORtutee.description}}</p>
+    {% if user.avg_rating == 1 %}
+      <p class="text-secondary">Rating: {{ tutorORtutee.avg_rating }} Star</p>
+    {% else %}
+      <p class="text-secondary">Rating: {{ tutorORtutee.avg_rating }} Stars</p>
+    {% endif %}
   </div>
   {% else %}
     <!--You are this user - display edit profile form-->
@@ -71,6 +76,11 @@
           <p class="text-secondary">{{ user.email }}</p>
           <p>{{ user.username }}</p>
           <p>{{ user.description }}</p>
+          {% if user.avg_rating == 1 %}
+            <p>Rating: {{ user.avg_rating }} Star</p>
+          {% else %}
+            <p>Rating: {{ user.avg_rating }} Stars</p>
+          {% endif %}
         </div>
       <!-- FORM HERE -->
       <form method="POST"> <!--enctype="multipart/form-data"-->

@@ -49,7 +49,21 @@ class User(AbstractUser):
         # images uploaded to that directory
         # need to 'pip install Pillow' to make this work
 
+    #fields for requests
     has_active_request = models.BooleanField(default=False)
+
+    # fields for reviews
+    reviewable_user = models.CharField(max_length=100,default="None")
+    avg_rating = models.IntegerField(default=0) # stores the value of their rating out of 5 (like stars)
+    rating_count = models.IntegerField(default=0) # stores the total number of ratings they have received so far
+    """
+    A user can only have one reviewable user of each type at a time.
+    This is because tutees can only have one active request at a time
+    and tutors can only help one user at a time.
+    Therefore, once they move onto making a new request/helping a new tutee
+    the window of opportunity to review this user has passed.
+    """
+    
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
     
@@ -93,5 +107,11 @@ class Conversation(models.Model):
     messages = models.ManyToManyField(Message)
 
 
-
-
+class Review(models.Model):
+    # need a field that maps the request to user writing it, and the user it is about
+    description = models.CharField(max_length=500) # written review
+    rating = models.IntegerField() # save the value of rating from 1 to 5
+    reviewee = models.CharField(max_length=100) # user being reviewed
+    reviewer = models.CharField(max_length=100) # user making review
+    def __str__(self):
+        return self.description
