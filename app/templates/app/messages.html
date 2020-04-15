@@ -62,13 +62,13 @@
               <!-- See if it is the user's message or the other user's to determine which side to display it on -->
               {% if message.sender.email == user.email %}
                 <!-- Display on right side -->
-                <div class="d-md-flex justify-content-end">
-                  <div class="message"> {{ message.content }} </div>
+                <div class="d-md-flex justify-content-end message-div">
+                  <div class="message sent"> {{ message.content }} </div>
                 </div>
               <!-- Else, display on left side -->
               {% else %}
-                <div class="d-md-flex justify-content-start">
-                  <div class="message"> {{ message.content }} </div>
+                <div class="d-md-flex justify-content-start message-div">
+                  <div class="message received"> {{ message.content }} </div>
                 </div>
               {% endif %}
             {% endfor %}
@@ -80,7 +80,7 @@
 
           <!-- Display form to type a new message below -->
           <br/>
-          <form action="/messages/" method="post">
+          <form id="messageForm" action="/messages/" method="post">
             {% csrf_token %}
             <div class="form-row justify-content-center">
               <div class="col-auto" style="margin-right: 5px;">
@@ -95,6 +95,11 @@
         </div>
       </div>
     </div>
+
+    <script>
+    var messageFormLocation = document.getElementById('messageForm').offsetTop;
+    window.scrollTo(0, messageFormLocation);
+    </script>
 
 
 

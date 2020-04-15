@@ -63,12 +63,21 @@
     color: white;
 }
 
+.message-div {
+    margin: 3px 10px;
+}
+
 .message {
-    margin-top: auto;
-    margin-bottom: auto;
-    margin-left: 10px;
-    border-radius: 25px;
-    background-color: #82ccdd;
+    border-radius: 18px;
     padding: 10px;
-    position: relative;
+    max-width: 49%;
+}
+
+.sent {
+    background-color: DodgerBlue;
+    color: white;
+}
+
+.received {
+    background-color: Gainsboro;
 }
