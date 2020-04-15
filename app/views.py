@@ -559,34 +559,37 @@ def review(request):
     # from their "reviewable_user" field
     
     # Check if logged in
-    # if request.user.is_authenticated:
-    #     # If getting a post request...
-    #     if request.method == 'POST':
-    #         # If it's a 'new request' request...
-    #         if request.POST.get('action') == 'Submit':
-    #             # Make sure they don't have an active request
-    #             user = get_user(request)
+    if request.user.is_authenticated:
+        # If getting a post request...
+        if request.method == 'POST':
+            # If it's a 'new request' request...
+            if request.POST.get('action') == 'Submit':
+                # Make sure they don't have an active request
+                user = get_user(request)
 
-    #             # If they don't have an active request, go ahead and create the request with their entered data
-    #             rating = request.POST['rating']
-    #             description = request.POST['description']
-    #             new_review = Review()
-    #             new_review.rating = rating
-    #             new_review.description = description
-    #             new_review.reviewer = user.email
-    #             new_review.reviewee = user.reviewable_user
-    #             new_request.save()
+                # If they don't have an active request, go ahead and create the request with their entered data
+                rating = request.POST['rating']
+                description = request.POST['description']
+                new_review = Review()
+                new_review.rating = rating
+                new_review.description = description
+                new_review.reviewer = user.email
+                new_review.reviewee = user.reviewable_user
+                new_review.save()
 
-    #             # Reset their reviewable_user field
-    #             user.reviewable_user = "None"
-    #             user.save()
+                # Reset their reviewable_user field
+                user.reviewable_user = "None"
+                user.save()
 
-    #             # Use redirect to refresh the page
-    #             return HttpResponseRedirect('/review')
-    #         # If it's a 'logout' request...
-    #         elif request.POST.get('action') == 'Logout':
-    #             logout(request)
-    #             return HttpResponseRedirect('/')
-    #     # Else, a GET request. just loading the page
-    #     else:
+                # Use redirect to refresh the page
+                return HttpResponseRedirect('/review')
+            # If it's a 'logout' request...
+            elif request.POST.get('action') == 'Logout':
+                logout(request)
+                return HttpResponseRedirect('/')
+       # Else, a GET request. just loading the page
+        else:
             return render(request, 'app/review.html')
+    # Else not authenticated
+    else:
+        return HttpResponseRedirect('/')
