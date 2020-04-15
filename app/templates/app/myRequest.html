@@ -1,6 +1,13 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <style>
+      /* Set the size of the div element that contains the map */
+     #map {
+       height: 400px;  /* The height is 400 pixels */
+       width: 100%;  /* The width is the width of the web page */
+      }
+   </style>
     <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
@@ -116,8 +123,58 @@
                               </div>
                               <div class="form-group">
                                       <label for="location"><h5>Location</h5></label>
-                                      <input id="location" class="form-control" type="text" name="location" maxlength="25" required>
+                                      <input id="location" class="form-control" type="text" name="location" maxlength="200" placeholder="Search Locations..." required>
                               </div>
+                            <div id="map"></div>
+                            <script>
+                            // Initialize and add the map
+                            function initMap() {
+                              // Preset to Charlottesville coordinates
+                              var cville = {lat: 38.0400823, lng: -78.5199935};
+                              // The map, centered at Cville
+                              var map = new google.maps.Map(
+                                  document.getElementById('map'), {zoom: 13, center: cville});
+                              // The marker, positioned at Cville
+                              var marker = new google.maps.Marker({position: cville, map: map});
+                              var input = document.getElementById('location');
+                              var searchBox = new google.maps.places.SearchBox(input);
+                              
+                              map.addListener('bounds_changed', function() {
+                                searchBox.setBounds(map.getBounds());
+                              });
+
+                              var markers = [];
+
+                              searchBox.addListener('places_changed', function() {
+                                var places = searchBox.getPlaces();
+                                
+                                if (places.length == 0)
+                                  return;
+
+                                markers.forEach(function (m) {m.setMap(null); });
+                                markers = [];
+
+                                var bounds = new google.maps.LatLngBounds();
+
+                                places.forEach(function (p) {
+                                  if (!p.geometry) 
+                                    return; 
+                                  markers.push(new google.maps.Marker({
+                                    map: map,
+                                    title: p.name,
+                                    position: p.geometry.location
+                                  }));
+
+                                  if (p.geometry.viewport)
+                                    bounds.union(p.geometry.viewport);
+                                  else
+                                    bounds.extend(p.geometry.location);
+                                });
+                                map.fitBounds(bounds);
+                              });
+                          }
+                                </script>
+
                               <div class="form-group">
                                   <label for="description"><h5>Description</h5></label>
                                   <textarea id="description" class="form-control" name="description" maxlength="1000" required> </textarea>
@@ -135,5 +192,11 @@
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  
+    
+    <!-- Google Map Scripts -->
+    <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAcOkgPocvKw5k_51OByJiogHAz2Dipn2M&callback=initMap&libraries=places">
+    </script>
   </body>
 </html>

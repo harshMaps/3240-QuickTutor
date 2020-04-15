@@ -52,50 +52,68 @@
       <div class="row"><a href="/contacts/">< Return to My Contacts</a></div>
       <div class="row">
         <div class="card w-75" style="margin: 10px auto; padding-bottom: 10px;">
-          <div class="card-header" style="margin-bottom: 10px;">
-            <div class="card-title"><h3>Messages with {{ other_user.get_full_name }}</h3></div>
+          <div class="card-header" style="margin-bottom: 10px; ">
+            <div class="card-title" style="margin: 0px;"><h5>Messages with {{ other_user.get_full_name }}</h5></div>
           </div>
-          <!-- If the user has messages with this person, display them -->
-          {% if messages %}
-            <!-- Iterate through messages -->
-            {% for message in messages %}
-              <!-- See if it is the user's message or the other user's to determine which side to display it on -->
-              {% if message.sender.email == user.email %}
-                <!-- Display on right side -->
-                <div class="d-md-flex justify-content-end">
-                  <div class="message"> {{ message.content }} </div>
-                </div>
-              <!-- Else, display on left side -->
-              {% else %}
-                <div class="d-md-flex justify-content-start">
-                  <div class="message"> {{ message.content }} </div>
-                </div>
-              {% endif %}
-            {% endfor %}
-          {% else %}
-          <div class="container">
-            <p class="lead">No messages to display. Type a new message below.</p>
-          </div>
-          {% endif %}
-
-          <!-- Display form to type a new message below -->
-          <br/>
-          <form action="/messages/" method="post">
-            {% csrf_token %}
-            <div class="form-row justify-content-center">
-              <div class="col-auto" style="margin-right: 5px;">
-                <textarea name='message' class="form-control" rows="3" cols="80" placeholder="Type a new message here..."></textarea>
-              </div>
-              <div class="col-auto">
-                <input type="hidden" name="receiver" value="{{ other_user.email }}">
-                <input name="action" type="submit" value="Send" class="inline btn btn-primary">
-              </div>
+          <div id="message-body" class="message-body">
+            <!-- If the user has messages with this person, display them -->
+            {% if messages %}
+              <!-- Iterate through messages -->
+              {% for message in messages %}
+                <!-- See if it is the user's message or the other user's to determine which side to display it on -->
+                {% if message.sender.email == user.email %}
+                  <!-- Display on right side -->
+                  <div class="d-md-flex justify-content-end message-div">
+                    <div class="message sent"> {{ message.content }} </div>
+                  </div>
+                <!-- Else, display on left side -->
+                {% else %}
+                  <div class="d-md-flex justify-content-start message-div">
+                    <div class="message received"> {{ message.content }} </div>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% else %}
+            <div class="container">
+              <p class="lead">No messages to display. Type a new message below.</p>
             </div>
-          </form>
+            {% endif %}
+
+            <!-- Display form to type a new message below -->
+            <br/>
+            <form action="/messages/" method="post">
+              {% csrf_token %}
+              <div class="form-row justify-content-center">
+                <div class="col-auto" style="margin-right: 5px;">
+                  <textarea name='message' class="form-control" rows="3" cols="80" placeholder="Type a new message here..."></textarea>
+                </div>
+                <div class="col-auto">
+                  <input type="hidden" name="receiver" value="{{ other_user.email }}">
+                  <input name="action" type="submit" value="Send" class="inline btn btn-primary">
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
       <div class="row"><a href="/review/">Review This User</a></Return></div>
+      <!-- Need a refresh button so that they don't use the browser refresh (will resend messages) -->
+      <div class="row">
+        <form id="bottom" action="/contacts/" method="post" style="margin: 0px auto;">
+          {% csrf_token %}
+          <input type="hidden" name="contact" value="{{ other_user.email }}">
+          <input name="action" type="submit" value="Check for new messages" class="btn btn-link">
+        </form>
+      </div> <br>
     </div>
+
+    <script>
+    var bottom = document.getElementById('bottom').offsetTop;
+    window.scrollTo(0, bottom);
+
+    var body = document.getElementById('message-body');
+    body.scrollTop = body.scrollHeight;
+    </script>
 
 
 

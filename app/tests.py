@@ -48,6 +48,33 @@ class LoginTestCases(TestCase):
 		self.assertTrue(client.login(username='mamba@gmail.com', password='CS3240!!'), 'Login unsuccessful.')
 
 
+
+# Testing login process Boundary Case (Testing Capitalization in password.)
+class LoginTestCasesboundary(TestCase):
+	# Create a user before tests
+	def setUp(self):
+		User.objects.create_user('mamba@gmail.com', 'CS3240!!')
+
+	def test_login_wrong_password(self):
+		client = Client()
+
+		# Test that login is unsuccessful
+		self.assertFalse(client.login(username='mamba@gmail.com', password='cs3240!!'), 'Login unsuccessful.')
+
+
+# Testing login process (Capitalization in Username)
+class LoginTestCasesCapitalization(TestCase):
+	# Create a user before tests
+	def setUp(self):
+		User.objects.create_user('mamba@gmail.com', 'CS3240!!')
+
+	def test_login_wrong_username(self):
+		client = Client()
+
+		# Test that login is unsuccessful
+		self.assertFalse(client.login(username='MAMBA@gmail.com', password='cs3240!!'), 'Login unsuccessful.')
+
+
 # Testing navigation around website
 class NavigationTestCases(TestCase):
 	# Create a user before tests
@@ -88,6 +115,7 @@ class RequestTestCases(TestCase):
 		# Create user
 		User.objects.create_user('mamba@gmail.com', 'CS3240!!')
 		User.objects.create_user('mamba@yahoo.com', 'password')
+		User.objects.create_user('mamba_blankfield@yahoo.com', 'password')
 
 		# Create client and login
 		client = Client()
@@ -102,6 +130,13 @@ class RequestTestCases(TestCase):
 		client.post('/myRequest/', {'action': 'Submit', 'title': 'Help me 2!', 'location': 'Clem',
 									'description': 'I really need help. $10'}, follow=True)
 
+
+		client.login(username='mamba_blankfield@yahoo.com', password='password')
+		client.post('/myRequest/', {'action': 'Submit', 'title': '', 'location': 'Clark',
+											   'description': ''}, follow=True)
+
+
+
 	# Check that user's boolean is set when they create a request
 	def test_has_active_request(self):
 		# Create client and login
@@ -110,6 +145,30 @@ class RequestTestCases(TestCase):
 
 		user = User.objects.get(email='mamba@gmail.com')
 		self.assertTrue(user.has_active_request, 'has_active_request boolean was not set.')
+
+	# Check that user's boolean is set when they create a request / making sure user boolean is still avaliable even if a field is blank.
+	def test_has_active_request_blankfield(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba_blankfield@yahoo.com', password='password')
+
+		user = User.objects.get(email='mamba_blankfield@yahoo.com')
+		self.assertTrue(user.has_active_request, 'has_active_request boolean was not set.')
+
+	# Check that user's created request is displayed on myRequest page, with the correct information
+	def test_request_creation_blankfield(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba_blankfield@yahoo.com', password='password')
+
+		# Send GET request to myRequest page to view your already made request
+		response = client.get('/myRequest/', follow=True)
+		request = response.context['request']
+
+		# Make sure data matches
+		self.assertIsNotNone(request.title, 'empty string  DNE.')
+		self.assertEqual(request.location, 'Clark', 'Location does not match.')
+		self.assertIsNotNone(request.description, 'Description does not match.')
 
 	# Check that user's created request is displayed on myRequest page, with the correct information
 	def test_request_creation(self):
@@ -185,6 +244,8 @@ class RequestTestCases(TestCase):
 		# Should have rendered the request editor template 'app/requestEditor.html'
 		template = response.templates[0].name
 		self.assertEqual(template, 'app/requestEditor.html', 'Request editor template was not rendered.')
+
+
 
 	# When a user updates a request with new information via the request editor page, check that the request
 	# is actually updated with the new data.
