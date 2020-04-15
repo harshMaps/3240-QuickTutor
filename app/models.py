@@ -115,5 +115,3 @@ class Review(models.Model):
     reviewer = models.CharField(max_length=100) # user making review
     def __str__(self):
         return self.description
-
-
