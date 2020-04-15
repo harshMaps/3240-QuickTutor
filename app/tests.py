@@ -55,23 +55,23 @@ class LoginTestCasesboundary(TestCase):
 	def setUp(self):
 		User.objects.create_user('mamba@gmail.com', 'CS3240!!')
 
-	def test_login(self):
+	def test_login_wrong_password(self):
 		client = Client()
 
-		# Test that login is successful
+		# Test that login is unsuccessful
 		self.assertFalse(client.login(username='mamba@gmail.com', password='cs3240!!'), 'Login unsuccessful.')
 
 
-# Testing login process (Capitalizaiton in Username)
+# Testing login process (Capitalization in Username)
 class LoginTestCasesCapitalization(TestCase):
 	# Create a user before tests
 	def setUp(self):
 		User.objects.create_user('mamba@gmail.com', 'CS3240!!')
 
-	def test_login(self):
+	def test_login_wrong_username(self):
 		client = Client()
 
-		# Test that login is successful
+		# Test that login is unsuccessful
 		self.assertFalse(client.login(username='MAMBA@gmail.com', password='cs3240!!'), 'Login unsuccessful.')
 
 
