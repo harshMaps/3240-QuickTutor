@@ -337,7 +337,7 @@ def contacts(request):
         # handle post request
         if request.method == 'POST':
             # If it's a 'message' request...
-            if request.POST.get('action') == 'Message':
+            if request.POST.get('action') == 'Message' or request.POST.get('action') == 'Check for new messages':
                 # Get the conversation object associated with this person.
                 user = get_user(request)
                 user_email = user.email
@@ -346,8 +346,8 @@ def contacts(request):
                 # Call helper method to get the correct Conversation object
                 conversation = getConversation(user_email, other_user_email)
 
-                # Get the last 50 messages, ordered from oldest to most recent
-                messages = conversation.messages.all().order_by('timestamp')[:50]
+                # Get the last 100 messages, ordered from oldest to most recent
+                messages = conversation.messages.all().order_by('timestamp')[:100]
 
                 # Get the other user
                 other_user = User.objects.filter(email=other_user_email)[0]
@@ -465,8 +465,8 @@ def messages(request):
                 # Add message to the conversation
                 conversation.messages.add(message)
 
-                # Get the last 50 messages, ordered from oldest to most recent
-                messages = conversation.messages.all().order_by('timestamp')[:50]
+                # Get the last 100 messages, ordered from oldest to most recent
+                messages = conversation.messages.all().order_by('timestamp')[:100]
 
                 context = {
                     'user': user,
