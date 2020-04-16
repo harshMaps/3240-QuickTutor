@@ -462,7 +462,7 @@ class FeedTestCases(TestCase):
 		response = client.get('/feed/')
 
 		# Test that the message appears on the page
-		message = 'No requests are available.'
+		message = 'No requests found.'
 		self.assertContains(response, message, count=1)
 
 	# Test that the requests are both listed in the correct order and with the proper timestamps
