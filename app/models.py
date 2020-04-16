@@ -54,7 +54,7 @@ class User(AbstractUser):
 
     # fields for reviews
     reviewable_user = models.CharField(max_length=100,default="None")
-    avg_rating = models.IntegerField(default=0) # stores the value of their rating out of 5 (like stars)
+    avg_rating = models.DecimalField(max_digits=2, decimal_places=1, default=0.0) # stores the value of their rating out of 5 (like stars)
     rating_count = models.IntegerField(default=0) # stores the total number of ratings they have received so far
     """
     A user can only have one reviewable user of each type at a time.

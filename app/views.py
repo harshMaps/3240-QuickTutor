@@ -233,7 +233,7 @@ def myRequest(request):
                 user.has_active_request = False
 
                 # Deal with reviews
-                user.reviewable_user = tutor # save the tutor object as reviewable
+                user.reviewable_user = tutor # save the tutor email as reviewable
                 # tutor variable should have been storing their email according to line 218
                 user.save()
 
@@ -241,7 +241,7 @@ def myRequest(request):
                 tutor_user = User.objects.get(email=tutor)
 
                 # Deal with reviews
-                tutor_user.reviewable_user = user.email # savee the user object as reviewable to the tutor
+                tutor_user.reviewable_user = user.email # save the user email as reviewable to the tutor
                 tutor_user.save()
 
                 # If the tutor is not in the user's contacts, add the tutor
@@ -255,7 +255,7 @@ def myRequest(request):
                     conversation.participants.add(tutor_user)
                     conversation.save()
 
-                # If the user is not in the tutor's contacts, add the user (pretty much guaranteed to happen)
+                # If the user is not in the tutor's contacts, add the user
                 if user not in tutor_user.contacts.all():
                     tutor_user.contacts.add(user)
                     tutor_user.save()
@@ -419,19 +419,19 @@ def contacts(request):
             # Fetch list of contacts (query set of user objects)
             contacts_users = user.contacts.all()
 
-            # Convert into list of emails and names
-            emails = []
+            # Convert into list of users and names
+            users = []
             names = []
             for contact in contacts_users:
-                email = contact.email
-                emails.append(email)
+                users.append(contact)
                 name = contact.get_full_name()
                 names.append(name)
 
             # Set context
             context = {
-                'emails': emails,
+                'users': users,
                 'names': names,
+                'self': user,
             }
 
             return render(request, 'app/contacts.html', context)
@@ -553,14 +553,15 @@ def getConversation(user1, user2):
 
     return conversation
 
+
 def review(request):
     # Check if logged in
     if request.user.is_authenticated:
         # If getting a post request...
         if request.method == 'POST':
-            # If it's a 'new request' request...
+            # If it's a 'Submit' review request...
             if request.POST.get('action') == 'Submit':
-                # Make sure they don't have an active request
+                # Get current user
                 user = get_user(request)
 
                 # create a new review object
@@ -570,7 +571,7 @@ def review(request):
                 new_review.rating = rating
                 new_review.description = description
                 new_review.reviewer = user.email
-                # reviewee = user.reviewable_user # need for later
+                reviewee_user = User.objects.get(email=user.reviewable_user) # need for later
                 new_review.reviewee = user.reviewable_user
                 new_review.save()
 
@@ -578,11 +579,18 @@ def review(request):
                 user.reviewable_user = "None"
                 user.save()
 
-                # Update the reviewee user: ratings rield  <-- having issues
-                # reviewee_user = User.objects.get(email=reviewee)
+                # Update the reviewee user: ratings field
+                current_average = float(reviewee_user.avg_rating)
+                current_count = int(reviewee_user.rating_count)
+                new_count = current_count + 1
+                new_average = ((current_count - 1)*current_average + int(rating))/new_count
+                #print("Current count " + str(current_count) + " current avg " + str(current_average) + " new average" + str(new_average))
+                reviewee_user.rating_count = new_count
+                reviewee_user.avg_rating = round(new_average, 1)
+                reviewee_user.save()
 
-                # Use redirect to refresh the page
-                return HttpResponseRedirect('/review')
+                # Use redirect to go back to contacts page
+                return HttpResponseRedirect('/contacts/')
             # If it's a 'logout' request...
             elif request.POST.get('action') == 'Logout':
                 logout(request)
