@@ -51,8 +51,6 @@
 
     </nav><br>
 
-    {{ error }}
-
     <div class="container">
       <div class="row">
         <div class="card w-75" style="margin: 10px auto;">
@@ -60,16 +58,19 @@
             <div class="card-title"><h3>My Contacts</h3></div>
           </div>
           <!-- If the user has existing contacts/conversations, display them in a list below -->
-          {% if emails %}
+          {% if users %}
             <!-- Iterate through contacts and display in list -->
-            {% for email, name in emails|zip:names %}
+            {% for user, name in users|zip:names %}
               <div class="row" style="margin-bottom: 20px; margin-left: 20px">
-                <p class="lead"> {{ name }} | {{ email }} </p>
+                <p class="lead"> {{ name }} | {{ user.email }} </p>
                 <form action="/contacts/" method="post" style="margin-left: 20px;">
                   {% csrf_token %}
-                  <input type="hidden" name="contact" value="{{ email }}">
+                  <input type="hidden" name="contact" value="{{ user.email }}">
                   <input name="action" type="submit" value="Message" class="btn btn-primary">
                 </form>
+                {% if self.reviewable_user == user.email %}
+                  <button class="btn btn-primary review-button"><a href="/review/" style="text-decoration: none; color: white;">Review</a></button>
+                {% endif %}
               </div>
             {% endfor %}
           <hr/>
