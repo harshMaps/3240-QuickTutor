@@ -7,6 +7,8 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- Our CSS -->
+    <link rel="stylesheet" type="text/css" href="../../static/app/style.css">
 
     <title>Profile</title>
   </head>
@@ -53,50 +55,79 @@
 
   {% if tutorORtutee %} <!-- if it's another user viewing the profile...
   tutorORtutee represents the user whose profile is to be viewed -->
-  <div class="tutorORtuteeProfile" style="text-align: center;">
-    <h2>{{ tutorORtutee.get_full_name }}'s Profile </h2><br>
-    <img style="border-radius: 50%; height: 10%; width: 10%;" src="{{ tutorORtutee.image.url }}">
-    <p class="text-secondary"><br>{{tutorORtutee.email}} <br/>
-      {{tutorORtutee.description}}</p>
-    {% if user.avg_rating == 1 %}
-      <p class="text-secondary">Rating: {{ tutorORtutee.avg_rating }} Star</p>
-    {% else %}
-      <p class="text-secondary">Rating: {{ tutorORtutee.avg_rating }} Stars</p>
-    {% endif %}
-  </div>
-  {% else %}
-    <!--You are this user - display edit profile form-->
+    <div class="tutorORtuteeProfile" style="text-align: center;">
+      <h2>{{ tutorORtutee.get_full_name }}'s Profile </h2><br>
+      <img style="border-radius: 50%; height: 10%; width: 10%;" src="{{ tutorORtutee.image.url }}">
+      <p class="lead"><br>{{ tutorORtutee.email }} <br/>
+        {{tutorORtutee.description}} <br/>
+      {% if tutorORtutee.avg_rating == 0.0 %}
+        No ratings</p>
+      {% else %}
+        Rating: {{ tutorORtutee.avg_rating }} Stars</p>
+      {% endif %}
+    </div>
+
+  {% else %} <!--You are this user - display edit profile form-->
     <div class="profile-pic" style="text-align: center;">
-      <img style="border-radius: 50%; height: 10%; width: 10%;" src="{{ user.image.url }}">
+      <img alt="{{ user.image }}" style="border-radius: 50%; height: 10%; width: 10%;" src="{{ user.image.url }}">
     </div>
     
-    <div class="content-section">
-        <div class="media-body" style="text-align:center;">
-          <h2 class="account-heading">{{ user.get_full_name }}</h2>
-          <p class="text-secondary">{{ user.email }}</p>
-          <p>{{ user.username }}</p>
-          <p>{{ user.description }}</p>
-          {% if user.avg_rating == 1 %}
-            <p>Rating: {{ user.avg_rating }} Star</p>
-          {% else %}
-            <p>Rating: {{ user.avg_rating }} Stars</p>
+    <div class="container">
+        <div style="text-align:center;">
+          <h2>{{ user.get_full_name }}</h2>
+          <p class="lead">{{ user.email }} <br/>
+          {{ user.description }} <br/>
+          {% if user.avg_rating == 0.0 %} <!-- if no ratings yet, display no ratings -->
+            No ratings</p>
+          {% else %} <!-- otherwise display average rating -->
+            Rating: {{ user.avg_rating }} Stars</p>
           {% endif %}
         </div>
-      <!-- FORM HERE -->
-      <form method="POST"> <!--enctype="multipart/form-data"-->
+
+      <!-- Update profile form -->
+      <form action="/profile/" method="post" enctype="multipart/form-data">
         {% csrf_token %}
-        <fieldset class="form-group">
-          <legend class="border-bottom mb-4" style="padding-left: 1%;"><br>Profile Info</legend>
-          <p style="padding-left: 1%;">Username: {{u_form.username}}</p>
-          <p style="padding-left: 1%;">Description: {{u_form.description}}</p>
-          <p style="padding-left: 1%;">Image - {{u_form.image}}</p>
-        </fieldset>
-        <div class="form-group" style="padding-left: 1%;">
-          <button class="btn btn-outline-info" type="submit" style="background-color: #6cbcaf; border-color: #6cbcaf; color: white;" 
-          >Update Profile</button>
+        <legend class="border-bottom mb-4" style="padding-left: 1%;">Update Profile</legend>
+        <div class="form-row">
+          <p class="lead inline" style="padding-left: 16px;">Description</p>
+          <div>
+            <input type="text" size="100" value="{{ user.description }}" name="description" class="form-control inline" style="margin-left: 5px;">
+          </div>
         </div>
+        <div class="form-row">
+          <p class="lead inline" style="padding-left: 16px; padding-right: 10px;">Upload profile picture (.png .jpg .jpeg .gif)</p>
+          <input type="file" id="img" name="img" accept="image/*">
+        </div>
+        <input name="action" type="submit" value="Update Profile" class="inline btn" style="background-color: #6cbcaf; border-color: #6cbcaf; color: white; margin-left: 10px;">
       </form>
     </div>
+  {% endif %}
+  <br>
+
+  <!-- DISPLAY REVIEWS   -->
+  {% if reviews %}
+  <div class="container">
+    <legend class="border-bottom mb-4" style="padding-left: 1%;">Reviews</legend>
+    {% for review in reviews %}
+      <div class="col-sm-5">
+        <div class="card" style="width: 130%; margin: 15px 0px;">
+          <div class="card-header">
+            <i class="card-title inline">{{ review.reviewer }} | {{ review.rating }}
+              {% if review.rating == 1 %} Star
+              {% else %} Stars
+              {% endif %} </i>
+          </div>
+          <div class="card-body">
+            {% if review.description|length > 1 %}
+              <p class="lead">{{ review.description }}</p>
+            {% else %}
+              <em>No description.</em>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
   {% endif %}
     
 

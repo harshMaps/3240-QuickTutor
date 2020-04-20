@@ -70,10 +70,16 @@ def feed(request):
                 # Get the email of the tutee who owns the request (this is the profile we want to display)
                 tutee = request.POST.get('tutee')
 
-                # Get the User instance and pass to context to render their profile page
+                # Get the User instance
                 tutee_user = User.objects.get(email=tutee)
+
+                # Get reviews associated with this tutee
+                reviews = Review.objects.filter(reviewee=tutee)
+
+                # Pass to context
                 context = {
                     'tutorORtutee': tutee_user,
+                    'reviews': reviews
                 }
 
                 return render(request, 'app/profile.html', context)
@@ -194,10 +200,16 @@ def myRequest(request):
                 # Get the tutor associated with the 'View profile' button they pressed
                 tutor = request.POST.get('tutor')
 
-                # Get the User instance and pass in context to generate profile page
+                # Get the User instance
                 tutor_user = User.objects.get(email=tutor)
+
+                # Get the reviews for this tutor
+                reviews = Review.objects.filter(reviewee=tutor)
+
+                # Pass to context
                 context = {
                     'tutorORtutee': tutor_user,
+                    'reviews': reviews
                 }
 
                 return render(request, 'app/profile.html', context)
@@ -317,22 +329,48 @@ def profile(request):
             if request.POST.get('action') == 'Logout':
                 logout(request)
                 return HttpResponseRedirect('/')
-            # Else updating their profile
-            else: 
-                u_form = UserUpdateForm(request.POST, request.FILES, instance=request.user)
 
-                if u_form.is_valid():
-                    u_form.save()
-                    # messages.success(request, f'Your account has been updated!')
-                    return redirect('profile')
+            # If it's an 'Update Profile' request
+            elif request.POST.get('action') == 'Update Profile':
+                # Get current user
+                user = get_user(request)
+
+                # Get form data
+                description = request.POST.get('description')
+                image = request.FILES.get('img')
+
+                # Convert to string to check file type
+                string_image = image.name.lower()
+                invalid_image = True
+                if string_image.endswith('.png') or string_image.endswith('.jpg') or string_image.endswith('.jpeg')\
+                        or string_image.endswith('.gif'):
+                    invalid_image = False
+
+                # If no image selected, or invalid image file type, get current image setting
+                if image == None or invalid_image:
+                    image = user.image
+
+                # Update user object
+                user.description = description
+                user.image = image
+                user.save()
+
+                # Redirect to profile page to refresh
+                return HttpResponseRedirect('/profile')
+
         # handle get request
         else:
-            u_form = UserUpdateForm(instance=request.user)
-        context = {
-            'user': get_user(request),
-            'u_form': u_form
-            }
-        return render(request, 'app/profile.html', context)
+            # Get reviews for this user
+            user = get_user(request)
+            reviews = Review.objects.filter(reviewee=user.email)
+
+            # Pass to context
+            context = {
+                'user': user,
+                'reviews': reviews
+                }
+            return render(request, 'app/profile.html', context)
+    # if user is not logged in
     else:
         return HttpResponseRedirect('/')
 
@@ -583,8 +621,7 @@ def review(request):
                 current_average = float(reviewee_user.avg_rating)
                 current_count = int(reviewee_user.rating_count)
                 new_count = current_count + 1
-                new_average = ((current_count - 1)*current_average + int(rating))/new_count
-                #print("Current count " + str(current_count) + " current avg " + str(current_average) + " new average" + str(new_average))
+                new_average = ((new_count - 1)*current_average + int(rating))/new_count
                 reviewee_user.rating_count = new_count
                 reviewee_user.avg_rating = round(new_average, 1)
                 reviewee_user.save()
