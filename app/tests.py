@@ -2,6 +2,7 @@ from django.test import TestCase, Client
 from .models import *
 import datetime
 from django.utils import timezone
+from io import BytesIO
 import re
 
 '''
@@ -420,7 +421,70 @@ class RequestTestCases(TestCase):
 		# Test that mamba@gmail.com does NOT appear in tutor list
 		self.assertNotContains(response, '<li>mamba@gmail.com')
 
-	# STILL NEED TO TEST 'VIEW PROFILE' FEATURE FROM MYREQUEST PAGE, AS WELL AS THE ACCEPTING PROCESS
+
+	# Test that when a user tries to view a tutor's profile (from myRequest page), they are directed to their profile page
+	def test_view_profile_request(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send POST request to feed page to offer help
+		client.post('/feed/', {'action': 'Offer Help', 'tutee': 'mamba@yahoo.com'})
+
+		# Login as other user
+		client.login(username='mamba@yahoo.com', password='password')
+
+		# Send POST request to view profile
+		response = client.post('/myRequest/', {'action': 'View Profile', 'tutor': 'mamba@gmail.com'})
+
+		# Test that the proper profile page is displayed
+		self.assertContains(response, 'mamba@gmail.com')
+
+		# Make sure update profile is not displayed
+		self.assertNotContains(response, 'Update Profile')
+
+	# Test that when a user accepts a tutor's help, the request is deleted, they are redirected to messages, and the user
+	# is added as a contact
+	def test_accept_and_delete(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send POST request to feed page to offer help
+		client.post('/feed/', {'action': 'Offer Help', 'tutee': 'mamba@yahoo.com'})
+
+		# Login as other user
+		client.login(username='mamba@yahoo.com', password='password')
+
+		# Send POST request to accept and delete
+		response = client.post('/myRequest/', {'action': 'Accept and Delete', 'tutor': 'mamba@gmail.com'})
+
+		# Test that the request was deleted
+		request = Request.objects.filter(user='mamba@yahoo.com')
+		self.assertEqual(len(request), 0, "A request in this user's name still exists, and should not.")
+
+		# Test that the user's boolean was properly set
+		tutee = User.objects.get(email='mamba@yahoo.com')
+		self.assertFalse(tutee.has_active_request, 'User has_active_request was not properly set to false.')
+
+		# Test that the tutee can now review this tutor
+		self.assertTrue(tutee.reviewable_user == 'mamba@gmail.com', 'Tutee cannot review tutor.')
+
+		# Test that the tutor can now review this tutee
+		tutor = User.objects.get(email='mamba@gmail.com')
+		self.assertTrue(tutor.reviewable_user == 'mamba@yahoo.com', 'Tutor cannot review tutee.')
+
+		# Test that both users were added to each other's contacts
+		self.assertTrue(tutee in tutor.contacts.all(), 'Tutee was not properly added to the tutor contacts.')
+		self.assertTrue(tutor in tutee.contacts.all(), 'Tutor was not properly added to the tutee contacts.')
+
+		# Test that a conversation object was created with these users as participants
+		participants = Conversation.objects.all()[0].participants
+		self.assertTrue(tutor in participants.all(), 'Tutor not in the conversation object participants.')
+		self.assertTrue(tutee in participants.all(), 'Tutee not in the conversation object participants.')
+
+		# Test that the messages page was rendered
+		self.assertEquals(response.templates[0].name, 'app/messages.html', 'User was not redirected to messages page.')
 
 
 class FeedTestCases(TestCase):
@@ -572,3 +636,79 @@ class FeedTestCases(TestCase):
 		# Test that mamba@gmail.com no longer appears in tutor list
 		tutors = request.tutors.all()
 		self.assertEqual(0, len(tutors), 'Tutor was not removed from the tutor list.')
+
+	# Test that when a user tries to view a tutee's profile (from feed page), they are directed to their profile page
+	def test_view_profile_feed(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send POST request to view profile
+		response = client.post('/feed/', {'action': 'View Profile', 'tutee': 'mamba@yahoo.com'})
+
+		# Test that the proper profile page is displayed
+		self.assertContains(response, 'mamba@yahoo.com')
+
+		# Make sure update profile is not displayed
+		self.assertNotContains(response, 'Update Profile')
+
+
+class ProfileTestCases(TestCase):
+	def setUp(self):
+		# Create users
+		User.objects.create_user('mamba@gmail.com', 'CS3240!!')
+		User.objects.create_user('mamba@yahoo.com', 'password')
+		User.objects.create_user('sean@gmail.com', 'sean')
+
+	# Test that the user's profile page is properly rendered.
+	def test_profile_rendered(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send GET request to view profile page
+		response = client.get('/profile/')
+
+		# Test that the correct profile page was fetched, as well as the ability to update it
+		self.assertContains(response, 'mamba@gmail.com')
+		self.assertContains(response, 'Update Profile')
+
+	# Test that the user can successfully update his profile.
+	def test_update_profile(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send POST request to update profile page
+		img = BytesIO(b'1010')
+		img.name = 'pic.jpg'
+		client.post('/profile/', {'action': 'Update Profile', 'description': 'my bio', 'img': img})
+
+		# Test that the profile has been successfully updated
+		user = User.objects.get(email='mamba@gmail.com')
+		description = user.description
+		self.assertEqual(description, 'my bio', 'User description not properly set.')
+
+		image = user.image
+		self.assertNotEqual(image, 'default.jpg', 'Image error.')
+
+	# Test that the user's profile picture is not updated if a non-image file is uploaded.
+	def test_update_profile_incorrect_file_type(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send POST request to update profile page
+		img = BytesIO(b'1010')
+		img.name = 'pic.doc'
+		client.post('/profile/', {'action': 'Update Profile', 'description': 'my bio', 'img': img})
+
+		# Test that the profile has been successfully updated
+		user = User.objects.get(email='mamba@gmail.com')
+		description = user.description
+		self.assertEqual(description, 'my bio', 'User description not properly set.')
+
+		image = user.image
+		self.assertEqual(image, 'default.jpg', 'Image error.')
+
+# still need to test ratings, messages, contacts

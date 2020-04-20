@@ -39,7 +39,7 @@ class User(AbstractUser):
     # needs fields to contain everything associated with a profile page
     email = models.EmailField(('email address'), unique=True)
     username = models.CharField(default="None", max_length=15)
-    description = models.CharField(default='New User',max_length=200)
+    description = models.CharField(default='New User',max_length=100)
 
     # messaging stuff
     contacts = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
