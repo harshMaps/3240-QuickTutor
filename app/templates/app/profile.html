@@ -58,7 +58,7 @@
   tutorORtutee represents the user whose profile is to be viewed -->
     <div class="tutorORtuteeProfile" style="text-align: center;">
       <h2>{{ tutorORtutee.get_full_name }}'s Profile </h2><br>
-      <img alt="{{ user.image.url }}" style="border-radius: 50%; height: 10%; width: 10%;" src="{{ tutorORtutee.image.url }}">
+      <img alt="{{ tutorORtutee.image.url }}" onerror="this.onerror=null; this.src='/media/default.jpg'" style="border-radius: 50%; height: 10%; width: 10%;" src="{{ tutorORtutee.image.url }}">
       <p class="lead"><br>{{ tutorORtutee.email }} <br/>
         {{tutorORtutee.description}} <br/>
       {% if tutorORtutee.avg_rating == 0.0 %}
@@ -70,7 +70,7 @@
 
   {% else %} <!--You are this user - display edit profile form-->
     <div class="profile-pic" style="text-align: center;">
-      <img alt="{{ user.image.url }}" style="border-radius: 50%; height: 10%; width: 10%;" src="{{ user.image.url }}">
+      <img alt="{{ user.image.url }}" onerror="this.onerror=null; this.src='/media/default.jpg'" style="border-radius: 50%; height: 10%; width: 10%;" src="{{ user.image.url }}">
     </div>
     
     <div class="container">
