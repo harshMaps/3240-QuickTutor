@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 's_o3grnkbw%-1ithd92sei7oo7lrko*p(_ro^z$0#yza4z4u+3'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['quicktutor-mamba.herokuapp.com', 'localhost', '127.0.0.1']
 
