@@ -166,3 +166,9 @@ try:
         django_heroku.settings(locals())
 except:
     found = False
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_SSL = True
+EMAIL_PORT = 465
+EMAIL_HOST_USER = 'quicktutor.mamba@gmail.com'
+EMAIL_HOST_PASSWORD = 'Mamba#24'
