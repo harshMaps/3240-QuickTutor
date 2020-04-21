@@ -711,4 +711,274 @@ class ProfileTestCases(TestCase):
 		image = user.image
 		self.assertEqual(image, 'default.jpg', 'Image error.')
 
-# still need to test ratings, messages, contacts
+	# Test that the user's profile description is updated even if no image is uploaded.
+	def test_update_profile_no_image(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send POST request to update profile page
+		client.post('/profile/', {'action': 'Update Profile', 'description': 'my bio'})
+
+		# Test that the profile has been successfully updated
+		user = User.objects.get(email='mamba@gmail.com')
+		description = user.description
+		self.assertEqual(description, 'my bio', 'User description not properly set.')
+
+		image = user.image
+		self.assertEqual(image, 'default.jpg', 'Image error.')
+
+
+class RatingTestCases(TestCase):
+	# Create users before tests and post some requests
+	def setUp(self):
+		# Create users
+		User.objects.create_user('mamba@gmail.com', 'CS3240!!')
+		User.objects.create_user('mamba@yahoo.com', 'password')
+		User.objects.create_user('sean@gmail.com', 'sean')
+
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send POST request to myRequest page to create a new request
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Help me!', 'location': 'Clark',
+									'description': 'I really need help. $5'}, follow=True)
+
+		# Login as next user and create a new request
+		client.login(username='mamba@yahoo.com', password='password')
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Math help', 'location': 'Clem',
+									'description': 'Integrals'}, follow=True)
+
+		# Login as next user and create a new request
+		client.login(username='sean@gmail.com', password='sean')
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Science help', 'location': 'Alderman',
+									'description': 'Acids and bases'}, follow=True)
+
+	# Test that users have the option to review each other after working together, and that rating is reflected
+	# on the profile page
+	def test_basic_review(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Offer help to mamba@yahoo.com
+		client.post('/feed/', {'action': 'Offer Help', 'tutee': 'mamba@yahoo.com'})
+
+		# Login as other account and accept help
+		client.login(username='mamba@yahoo.com', password='password')
+		client.post('/myRequest/', {'action': 'Accept and Delete', 'tutor': 'mamba@gmail.com'})
+
+		# Check that both users now appear in each other's reviewable user field
+		gmail = User.objects.get(email='mamba@gmail.com')
+		yahoo = User.objects.get(email='mamba@yahoo.com')
+		self.assertEqual(gmail.reviewable_user, yahoo.email)
+		self.assertEqual(yahoo.reviewable_user, gmail.email)
+
+		# Send get request to contacts page and make sure review button appears
+		response = client.get('/contacts/')
+		self.assertContains(response, 'Review')
+
+		# Send get request to make sure review page displays proper reviewee
+		response = client.get('/review/')
+		self.assertContains(response, 'mamba@gmail.com')
+
+		# Review the gmail user
+		client.post('/review/', {'action': 'Submit', 'rating': 5, 'description': 'Great'})
+
+		# Check that the gmail user now reflects the review
+		gmail = User.objects.get(email='mamba@gmail.com')
+		self.assertEqual(gmail.avg_rating, 5, 'Average rating not properly set.')
+
+		# Login as gmail user and review the yahoo user
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+		client.post('/review/', {'action': 'Submit', 'rating': 3, 'description': 'Okay'})
+
+		# Check that the yahoo user now reflects the review
+		yahoo = User.objects.get(email='mamba@yahoo.com')
+		self.assertEqual(yahoo.avg_rating, 3, 'Average rating not properly set.')
+
+		# Check that the review is displayed on the profile page
+		response = client.get('/profile/')
+		self.assertContains(response, 'Great')
+
+		# Check that the users can no longer review each other
+		response = client.get('/review/')
+		self.assertContains(response, 'Currently no user to review')
+
+	# Test that average rating is properly calculated
+	def test_multiple_reviews(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Offer help to mamba@yahoo.com
+		client.post('/feed/', {'action': 'Offer Help', 'tutee': 'mamba@yahoo.com'})
+
+		# Login as other account and accept help
+		client.login(username='mamba@yahoo.com', password='password')
+		client.post('/myRequest/', {'action': 'Accept and Delete', 'tutor': 'mamba@gmail.com'})
+
+		# Review the gmail user
+		client.post('/review/', {'action': 'Submit', 'rating': 5, 'description': 'Great'})
+
+		# Post a new request
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Math help', 'location': 'Clem',
+								'description': 'Integrals'}, follow=True)
+
+		# Login as mamba@gmail.com and offer help again
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+		client.post('/feed/', {'action': 'Offer Help', 'tutee': 'mamba@yahoo.com'})
+
+		# Login as other account and accept help, and review user again
+		client.login(username='mamba@yahoo.com', password='password')
+		client.post('/myRequest/', {'action': 'Accept and Delete', 'tutor': 'mamba@gmail.com'})
+		client.post('/review/', {'action': 'Submit', 'rating': 2, 'description': 'meh'})
+
+		# Check that the gmail user's average rating is now 3.5
+		gmail = User.objects.get(email='mamba@gmail.com')
+		self.assertEqual(gmail.avg_rating, 3.5, 'Average rating incorrectly calculated.')
+
+		# Check that the gmail user's profile displays both reviews
+		response = client.post('/feed/', {'action': 'View Profile', 'tutee': 'mamba@gmail.com'})
+		self.assertContains(response, 'meh')
+		self.assertContains(response, 'Great')
+
+		# Check that the gmail user's profile displays both reviews when accessed from that account
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+		response = client.get('/profile/')
+		self.assertContains(response, 'meh')
+		self.assertContains(response, 'Great')
+
+class ContactTestCases(TestCase):
+	# Create users before tests and post some requests
+	def setUp(self):
+		# Create users
+		User.objects.create_user('mamba@gmail.com', 'CS3240!!')
+		User.objects.create_user('mamba@yahoo.com', 'password')
+		User.objects.create_user('sean@gmail.com', 'sean')
+
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send POST request to myRequest page to create a new request
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Help me!', 'location': 'Clark',
+									'description': 'I really need help. $5'}, follow=True)
+
+		# Login as next user and create a new request
+		client.login(username='mamba@yahoo.com', password='password')
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Math help', 'location': 'Clem',
+									'description': 'Integrals'}, follow=True)
+
+		# Login as next user and create a new request
+		client.login(username='sean@gmail.com', password='sean')
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Science help', 'location': 'Alderman',
+									'description': 'Acids and bases'}, follow=True)
+
+	# Test that users can add each other as a contact
+	def test_add_contact(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Add yahoo account as a contact
+		client.post('/contacts/', {'action': 'Add', 'new_contact': 'mamba@yahoo.com'})
+
+		# Check that both users were added to each others contacts
+		gmail = User.objects.get(email='mamba@gmail.com')
+		yahoo = User.objects.get(email='mamba@yahoo.com')
+		self.assertTrue(yahoo in gmail.contacts.all())
+		self.assertTrue(gmail in yahoo.contacts.all())
+
+		# Check that the yahoo user now appears on the contacts page
+		response = client.get('/contacts/')
+		self.assertContains(response, 'mamba@yahoo.com')
+
+	# Test that users cannot add themselves as a contact, or a non-existent user
+	def test_invalid_contact(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Add invalid account as a contact
+		client.post('/contacts/', {'action': 'Add', 'new_contact': 'random@yahoo.com'})
+
+		# Check that the contacts list is still empty
+		gmail = User.objects.get(email='mamba@gmail.com')
+		self.assertTrue(len(gmail.contacts.all()) == 0, 'Invalid contact was added.')
+
+		# Try to add yourself as a contact
+		client.post('/contacts/', {'action': 'Add', 'new_contact': 'mamba@gmail.com'})
+
+		# Check that the contacts list is still empty
+		gmail = User.objects.get(email='mamba@gmail.com')
+		self.assertTrue(len(gmail.contacts.all()) == 0, 'Invalid contact was added.')
+
+
+class MessageTestCases(TestCase):
+	# Create users before tests and post some requests
+	def setUp(self):
+		# Create users
+		User.objects.create_user('mamba@gmail.com', 'CS3240!!')
+		User.objects.create_user('mamba@yahoo.com', 'password')
+		User.objects.create_user('sean@gmail.com', 'sean')
+
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Send POST request to myRequest page to create a new request
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Help me!', 'location': 'Clark',
+									'description': 'I really need help. $5'}, follow=True)
+
+		# Login as next user and create a new request
+		client.login(username='mamba@yahoo.com', password='password')
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Math help', 'location': 'Clem',
+									'description': 'Integrals'}, follow=True)
+
+		# Login as next user and create a new request
+		client.login(username='sean@gmail.com', password='sean')
+		client.post('/myRequest/', {'action': 'Submit', 'title': 'Science help', 'location': 'Alderman',
+									'description': 'Acids and bases'}, follow=True)
+
+	# Test that users can send each other messages.
+	def test_send_message(self):
+		# Create client and login
+		client = Client()
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+
+		# Add yahoo account as a contact
+		client.post('/contacts/', {'action': 'Add', 'new_contact': 'mamba@yahoo.com'})
+
+		# Send POST request to send message
+		client.post('/messages/', {'action': 'Send', 'receiver': 'mamba@yahoo.com', 'message': 'Hello'})
+
+		# Check that a conversation object with both users was created, and this message was attached
+		all_conversations_user1 = Conversation.objects.filter(participants__email='mamba@gmail.com')
+		conversation = all_conversations_user1.filter(participants__email='mamba@yahoo.com')[0]
+		message = conversation.messages.get(content='Hello')
+		self.assertEqual(message.sender.email, 'mamba@gmail.com', 'Sender was not properly set.')
+		self.assertEqual(message.receiver.email, 'mamba@yahoo.com', 'Receiver was not properly set.')
+
+		# Check that the message is now displayed on the messages page
+		response = client.post('/contacts/', {'action': 'Message', 'contact': 'mamba@yahoo.com'})
+		self.assertContains(response, 'Hello')
+
+		# Login as the other user and check that the message is displayed
+		client.login(username='mamba@yahoo.com', password='password')
+		response = client.post('/contacts/', {'action': 'Message', 'contact': 'mamba@gmail.com'})
+		self.assertContains(response, 'Hello')
+
+		# Send a message back
+		response = client.post('/messages/', {'action': 'Send', 'receiver': 'mamba@gmail.com', 'message': 'Hi'})
+
+		# Check that both messages are now rendered
+		self.assertContains(response, 'Hello')
+		self.assertContains(response, 'Hi')
+
+		# Login as original user and check that both messages are displayed
+		client.login(username='mamba@gmail.com', password='CS3240!!')
+		response = client.post('/contacts/', {'action': 'Message', 'contact': 'mamba@yahoo.com'})
+		self.assertContains(response, 'Hello')
+		self.assertContains(response, 'Hi')
