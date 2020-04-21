@@ -5,10 +5,9 @@ from django.contrib.auth import get_user, logout
 from django.db.models import Q
 from .models import *
 from .forms import *
-from django.contrib import messages as django_messages
+from django.core.mail import send_mail
+from django.conf import settings
 import datetime
-import requests as rq
-
 
 # Rendering views
 def index(request):
@@ -219,6 +218,9 @@ def myRequest(request):
                 # Get User and Request objects
                 user = get_user(request)
                 request_to_edit = Request.objects.get(user=user.email)
+                request_title = request_to_edit.title
+                request_description = request_to_edit.description
+                request_location = request_to_edit.location
 
                 # Get tutor to accept
                 tutor = request.POST.get('tutor')
@@ -271,6 +273,18 @@ def myRequest(request):
                 if user not in tutor_user.contacts.all():
                     tutor_user.contacts.add(user)
                     tutor_user.save()
+
+                # Send email to tutor to notify that request was accepted
+                subject = 'QuickTutor Alert - Your Offer Has Been Accepted'
+                message = user.email + ' has accepted your help for the following request: \n\n' \
+                        'Title: ' + request_title + '\n' \
+                        'Location: ' + request_location + '\n' \
+                        'Description: ' + request_description + '\n\n' \
+                        'Visit http://quicktutor-mamba.herokuapp.com/contacts/ to contact them and get started!'
+                sender = 'quicktutormamba@gmail.com'
+                recipient = [tutor]
+
+                send_mail(subject, message, sender, recipient, fail_silently=True)
 
                 # Call helper method to get the correct Conversation object
                 conversation = getConversation(user.email, tutor)
