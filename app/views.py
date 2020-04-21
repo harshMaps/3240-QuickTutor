@@ -351,17 +351,18 @@ def profile(request):
 
                 # Get form data
                 description = request.POST.get('description')
-                image = request.FILES.get('img')
+                image = request.FILES.get('img') # will be None if not found
 
                 # Convert to string to check file type
-                string_image = image.name.lower()
                 invalid_image = True
-                if string_image.endswith('.png') or string_image.endswith('.jpg') or string_image.endswith('.jpeg')\
-                        or string_image.endswith('.gif'):
-                    invalid_image = False
+                if image is not None:
+                    string_image = image.name.lower()
+                    if string_image.endswith('.png') or string_image.endswith('.jpg') or string_image.endswith('.jpeg')\
+                                                                                    or string_image.endswith('.gif'):
+                        invalid_image = False
 
                 # If no image selected, or invalid image file type, get current image setting
-                if image == None or invalid_image:
+                if invalid_image:
                     image = user.image
 
                 # Update user object
