@@ -70,7 +70,7 @@
 
   {% else %} <!--You are this user - display edit profile form-->
     <div class="profile-pic" style="text-align: center;">
-      <img alt="{{ user.image.url }}" style="border-radius: 50%; height: 10%; width: 10%;" src="/static{{ user.image.url }}">
+      <img alt="/static{{ user.image.url }}" style="border-radius: 50%; height: 10%; width: 10%;" src="/static{{ user.image.url }}">
     </div>
     
     <div class="container">
