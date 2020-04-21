@@ -45,7 +45,7 @@ class User(AbstractUser):
     contacts = models.ManyToManyField(settings.AUTH_USER_MODEL, blank=True)
     
     # profile picture field
-    image = models.ImageField(default='default.jpg')
+    image = models.ImageField(default='default.jpg', upload_to='profile_pics')
         # images uploaded to that directory
         # need to 'pip install Pillow' to make this work
 
