@@ -77,10 +77,12 @@
                 <form action="/contacts/" method="post" style="margin-left: 20px;">
                   {% csrf_token %}
                   <input type="hidden" name="contact" value="{{ user.email }}">
-                  <input name="action" type="submit" value="Message" class="btn btn-primary">
+                  <input name="action" type="submit" value="Message" class="btn btn-primary" style="background-color: #6cbcaf;
+                  border-color: #6cbcaf;
+                  color: white;">
                 </form>
                 {% if self.reviewable_user == user.email %}
-                  <button class="btn btn-primary review-button"><a href="/review/" style="text-decoration: none; color: white;">Leave a Review</a></button>
+                  <button class="btn btn-success review-button"><a href="/review/" style="text-decoration: none; color: white;">Leave a Review</a></button>
                 {% endif %}
               </div>
             {% endfor %}
@@ -97,7 +99,7 @@
                 <input type="text" size="30" placeholder="Enter email address..." name="new_contact" class="form-control inline" style="margin-left: 5px;">
               </div>
               <div class="col-auto">
-                <input name="action" type="submit" value="Add" class="inline btn btn-primary">
+                <input name="action" type="submit" value="Add" class="inline btn btn-success">
               </div>
             </div>
           </form>
