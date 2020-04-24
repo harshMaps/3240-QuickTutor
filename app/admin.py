@@ -8,7 +8,13 @@ admin.site.register(Message)
 admin.site.register(Conversation)
 admin.site.register(Review)
 
-
+'''
+* REFERENCES
+* Title: How to use email as username for Django authentication
+* Author: Federico Jaramillo
+* Date: May 10, 2017
+* URL: https://www.fomfus.com/articles/how-to-use-email-as-username-for-django-authentication-removing-the-username
+'''
 class UserAdmin(DjangoUserAdmin):
     """Define admin model for custom User model with no email field."""
 

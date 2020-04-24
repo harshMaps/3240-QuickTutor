@@ -2,6 +2,16 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.conf import settings
 
+'''
+* REFERENCES
+* Title: How to use email as username for Django authentication
+* Author: Federico Jaramillo
+* Date: May 10, 2017
+* URL: https://www.fomfus.com/articles/how-to-use-email-as-username-for-django-authentication-removing-the-username
+
+* Title: Model Field Reference (Django Documentation)
+* URL: https://docs.djangoproject.com/en/3.0/ref/models/fields/
+'''
 class UserManager(BaseUserManager):
     # Need a new model manager since we removed the username field
 

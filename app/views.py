@@ -8,7 +8,11 @@ from .forms import *
 from django.core.mail import send_mail
 from django.conf import settings
 import datetime
-
+'''
+* REFERENCES
+* Title: Sending email (Django Documentation)
+* URL: https://docs.djangoproject.com/en/3.0/topics/email/
+'''
 # Rendering views
 def index(request):
     # If logged in, send them to feed page
